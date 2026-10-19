@@ -1,0 +1,5 @@
+venv
+test
+.env
+guide_folder_stracture.txt
+__pycache__
