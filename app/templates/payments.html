@@ -3,16 +3,19 @@
 
 {% block content %}
 <div class="page-header">
-    <h1 class="page-title">Monthly Fee Collection & Dues Ledger</h1>
+    <div>
+        <h1 class="page-title">Monthly Fee Collection & Dues Ledger</h1>
+        <p class="page-subtitle">Track per-subject fee statuses, collect partial or full monthly dues, and issue unified receipts.</p>
+    </div>
 </div>
 
 <div class="card">
     <div class="toolbar">
-        <label style="font-weight: 600; font-size: 0.9rem;">Billing Month:</label>
+        <label style="font-weight:600; font-size:0.84rem; color:var(--text-secondary);">Billing Month:</label>
         <input type="month" id="billing-month" value="{{ current_month }}">
 
         <select id="dues-status-filter">
-            <option value="">All Statuses</option>
+            <option value="">All Fee Statuses</option>
             <option value="UNPAID">Unpaid Only</option>
             <option value="PARTIAL">Partially Paid</option>
             <option value="PAID">Fully Paid</option>
@@ -28,22 +31,24 @@
                     <th>Student</th>
                     <th>Grade</th>
                     <th>Subject Breakdown (Paid vs Unpaid)</th>
-                    <th>Expected</th>
-                    <th>Paid</th>
-                    <th>Pending</th>
+                    <th class="col-num">Expected</th>
+                    <th class="col-num">Paid</th>
+                    <th class="col-num">Pending</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th class="col-num">Action</th>
                 </tr>
             </thead>
             <tbody id="dues-tbody">
-                <tr><td colspan="8">Loading monthly ledger...</td></tr>
+                <tr><td colspan="8" style="color:var(--text-muted);">Loading monthly ledger...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
 <div class="card">
-    <h3 style="margin-bottom: 0.75rem;">Recent Payment Receipts</h3>
+    <div class="card-header">
+        <h3 class="card-title">Recent Payment Receipts</h3>
+    </div>
     <div class="table-wrap">
         <table>
             <thead>
@@ -53,12 +58,12 @@
                     <th>Student</th>
                     <th>Subject & Teacher</th>
                     <th>Month</th>
-                    <th>Amount</th>
+                    <th class="col-num">Amount</th>
                     <th>Method</th>
                 </tr>
             </thead>
             <tbody id="receipts-tbody">
-                <tr><td colspan="7">Loading payment history...</td></tr>
+                <tr><td colspan="7" style="color:var(--text-muted);">Loading payment history...</td></tr>
             </tbody>
         </table>
     </div>
@@ -75,9 +80,9 @@
             <input type="hidden" id="pay-student-id">
             <input type="hidden" id="pay-billing-month">
 
-            <div style="margin-bottom: 1rem;">
-                <p style="font-size: 0.9rem; color: var(--muted); margin-bottom: 0.5rem;">
-                    Check the teacher subjects the student is paying for today:
+            <div style="margin-bottom:1rem;">
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.6rem;">
+                    Select the teacher subjects the student is paying for today:
                 </p>
                 <div id="payable-enrollments-list"></div>
             </div>
@@ -97,11 +102,11 @@
                 </div>
             </div>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 1rem; padding-top: 0.85rem; border-top: 1px solid var(--border);">
-                <div style="font-size: 1.1rem; font-weight: 700;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem; padding-top:0.9rem; border-top:1px solid var(--border);">
+                <div class="num-tabular" style="font-size:1.1rem; font-weight:700;">
                     Total Selected: ₹<span id="pay-selected-total">0.00</span>
                 </div>
-                <div style="display:flex; gap: 0.5rem;">
+                <div style="display:flex; gap:0.5rem;">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('payment-modal')">Cancel</button>
                     <button type="submit" class="btn btn-success" id="pay-submit-btn">Confirm & Generate Receipt</button>
                 </div>

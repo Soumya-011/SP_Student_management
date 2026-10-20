@@ -1,3 +1,5 @@
+const DESKTOP_MEDIA = window.matchMedia("(min-width: 1024px)");
+
 function escapeHtml(value) {
     if (value === null || value === undefined) return "";
     return String(value)
@@ -6,6 +8,13 @@ function escapeHtml(value) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+
+function getInitials(fullName) {
+    if (!fullName) return "NA";
+    const parts = String(fullName).trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 function debounce(fn, delay = 300) {
@@ -33,6 +42,88 @@ function openModal(id) {
 function closeModal(id) {
     document.getElementById(id)?.classList.remove("open");
 }
+
+/* ==========================================================================
+   Retractable Off-Canvas Drawer Controller (260px <-> 0px)
+   ========================================================================== */
+function syncSidebarAccessibility() {
+    const html = document.documentElement;
+    const sidebar = document.getElementById("app-sidebar");
+    const toggleBtn = document.getElementById("sidebar-toggle");
+    if (!sidebar) return;
+
+    let isOpen;
+    if (DESKTOP_MEDIA.matches) {
+        isOpen = html.getAttribute("data-sidebar") !== "collapsed";
+    } else {
+        isOpen = html.getAttribute("data-mobile-sidebar") === "open";
+    }
+
+    // Prevent keyboard Tab focus inside hidden 0px drawer
+    sidebar.inert = !isOpen;
+    sidebar.setAttribute("aria-hidden", String(!isOpen));
+    if (toggleBtn) {
+        toggleBtn.setAttribute("aria-expanded", String(isOpen));
+    }
+}
+
+function toggleSidebar() {
+    const html = document.documentElement;
+    if (DESKTOP_MEDIA.matches) {
+        const isCollapsed = html.getAttribute("data-sidebar") === "collapsed";
+        const nextState = isCollapsed ? "open" : "collapsed";
+        html.setAttribute("data-sidebar", nextState);
+        try {
+            localStorage.setItem("sidebar_collapsed", String(nextState === "collapsed"));
+        } catch (e) {}
+    } else {
+        const isMobileOpen = html.getAttribute("data-mobile-sidebar") === "open";
+        if (isMobileOpen) {
+            html.removeAttribute("data-mobile-sidebar");
+        } else {
+            html.setAttribute("data-mobile-sidebar", "open");
+        }
+    }
+    syncSidebarAccessibility();
+}
+
+function closeMobileSidebar() {
+    document.documentElement.removeAttribute("data-mobile-sidebar");
+    syncSidebarAccessibility();
+}
+
+// Initialize drawer transitions, resize sync, and keyboard shortcuts
+document.addEventListener("DOMContentLoaded", () => {
+    syncSidebarAccessibility();
+
+    // Remove preload transition lock after initial paint
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            document.documentElement.classList.remove("preload-transitions");
+        });
+    });
+
+    // Clear mobile backdrop lock automatically if window resizes to desktop
+    DESKTOP_MEDIA.addEventListener("change", (e) => {
+        if (e.matches) {
+            document.documentElement.removeAttribute("data-mobile-sidebar");
+        }
+        syncSidebarAccessibility();
+    });
+
+    // Keyboard shortcuts: Ctrl+B / Cmd+B toggles drawer; Escape closes modals/mobile drawer
+    document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+            e.preventDefault();
+            toggleSidebar();
+        } else if (e.key === "Escape") {
+            closeMobileSidebar();
+            document.querySelectorAll(".modal-backdrop.open").forEach((m) => {
+                m.classList.remove("open");
+            });
+        }
+    });
+});
 
 async function apiFetch(url, options = {}) {
     const config = {

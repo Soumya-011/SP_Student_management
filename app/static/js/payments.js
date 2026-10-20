@@ -25,7 +25,7 @@ async function loadPaymentsDashboard() {
 function renderDuesTable() {
     const tbody = document.getElementById("dues-tbody");
     if (!currentDuesList.length) {
-        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--muted);">No student fee records match this filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="color:var(--text-muted);">No student fee records match this filter.</td></tr>`;
         return;
     }
 
@@ -34,36 +34,41 @@ function renderDuesTable() {
             const breakdown = d.enrollments
                 .map((e) => {
                     const cls = e.is_paid ? "badge-green" : "badge-red";
-                    const icon = e.is_paid ? "✓ Paid" : "Unpaid";
-                    return `<span class="badge ${cls}">${escapeHtml(e.subject)} (${escapeHtml(e.teacher_name)}): ₹${e.monthly_fee} [${icon}]</span>`;
+                    const label = e.is_paid ? "✓ Paid" : "Unpaid";
+                    return `<span class="badge ${cls} num-tabular">${escapeHtml(e.subject)} (${escapeHtml(e.teacher_name)}): ₹${e.monthly_fee} · ${label}</span>`;
                 })
                 .join(" ");
 
             const statusBadge =
                 d.payment_status === "PAID"
-                    ? `<span class="badge badge-green">PAID</span>`
+                    ? `<span class="badge badge-green badge-status">PAID</span>`
                     : d.payment_status === "PARTIAL"
-                    ? `<span class="badge badge-yellow">PARTIAL</span>`
-                    : `<span class="badge badge-red">UNPAID</span>`;
+                    ? `<span class="badge badge-yellow badge-status">PARTIAL</span>`
+                    : `<span class="badge badge-red badge-status">UNPAID</span>`;
 
             const actionBtn =
                 d.payment_status === "PAID"
-                    ? `<span style="color:var(--muted); font-size:0.85rem;">Completed</span>`
+                    ? `<span style="color:var(--text-muted); font-size:0.8rem; font-weight:500;">Settled</span>`
                     : `<button class="btn btn-sm btn-success" onclick="openCollectModal(${d.student_id})">Collect Fee</button>`;
 
             return `
             <tr>
                 <td>
-                    <strong>${escapeHtml(d.student_name)}</strong>
-                    <br><small style="color:var(--muted);">Guardian: ${escapeHtml(d.guardian_name)} (${escapeHtml(d.guardian_phone)})</small>
+                    <div class="identity-cell">
+                        <span class="avatar-circle avatar-blue">${escapeHtml(getInitials(d.student_name))}</span>
+                        <div class="identity-meta">
+                            <span class="identity-name">${escapeHtml(d.student_name)}</span>
+                            <span class="identity-sub">Guardian: ${escapeHtml(d.guardian_name)} (${escapeHtml(d.guardian_phone)})</span>
+                        </div>
+                    </div>
                 </td>
-                <td>${escapeHtml(d.grade)}</td>
+                <td><span class="badge badge-gray">${escapeHtml(d.grade)}</span></td>
                 <td>${breakdown}</td>
-                <td>₹${d.total_expected_fee}</td>
-                <td style="color:var(--success); font-weight:600;">₹${d.total_paid}</td>
-                <td style="color:var(--danger); font-weight:600;">₹${d.total_pending}</td>
+                <td class="col-num">₹${d.total_expected_fee}</td>
+                <td class="col-num" style="color:var(--success); font-weight:600;">₹${d.total_paid}</td>
+                <td class="col-num" style="color:var(--danger); font-weight:600;">₹${d.total_pending}</td>
                 <td>${statusBadge}</td>
-                <td>${actionBtn}</td>
+                <td class="col-num">${actionBtn}</td>
             </tr>
         `;
         })
@@ -73,7 +78,7 @@ function renderDuesTable() {
 function renderReceiptsTable(receipts) {
     const tbody = document.getElementById("receipts-tbody");
     if (!receipts.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--muted);">No payments recorded for this month yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--text-muted);">No payments recorded for this month yet.</td></tr>`;
         return;
     }
 
@@ -81,12 +86,12 @@ function renderReceiptsTable(receipts) {
         .map(
             (r) => `
         <tr>
-            <td><strong>${escapeHtml(r.receipt_no)}</strong></td>
-            <td>${escapeHtml(r.payment_date)}</td>
-            <td>${escapeHtml(r.student_name)}</td>
-            <td>${escapeHtml(r.subject)} (${escapeHtml(r.teacher_name)})</td>
-            <td>${escapeHtml(r.billing_month)}</td>
-            <td><strong>₹${r.amount_paid}</strong></td>
+            <td class="num-tabular"><strong>${escapeHtml(r.receipt_no)}</strong></td>
+            <td class="num-tabular">${escapeHtml(r.payment_date)}</td>
+            <td><strong>${escapeHtml(r.student_name)}</strong></td>
+            <td>${escapeHtml(r.subject)} <span style="color:var(--text-muted);">(${escapeHtml(r.teacher_name)})</span></td>
+            <td class="num-tabular">${escapeHtml(r.billing_month)}</td>
+            <td class="col-num"><strong>₹${r.amount_paid}</strong></td>
             <td><span class="badge badge-gray">${escapeHtml(r.payment_method)}</span></td>
         </tr>
     `
@@ -107,17 +112,17 @@ function openCollectModal(studentId) {
         .map((e) => {
             if (e.is_paid) {
                 return `
-                <div style="padding:0.5rem 0.75rem; border:1px solid var(--border); border-radius:6px; margin-bottom:0.4rem; background:#f8fafc; color:var(--muted);">
-                    ✓ <strong>${escapeHtml(e.subject)}</strong> (${escapeHtml(e.teacher_name)}) — ₹${e.amount_paid}
-                    <span class="badge badge-green">Already Paid (${escapeHtml(e.receipt_no)})</span>
+                <div class="num-tabular" style="padding:0.6rem 0.8rem; border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:0.45rem; background:var(--bg-canvas); color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+                    <span>✓ <strong>${escapeHtml(e.subject)}</strong> (${escapeHtml(e.teacher_name)}) — ₹${e.amount_paid}</span>
+                    <span class="badge badge-green">Paid · ${escapeHtml(e.receipt_no)}</span>
                 </div>
             `;
             }
             return `
-            <label style="display:flex; justify-content:space-between; align-items:center; padding:0.55rem 0.75rem; border:1px solid var(--border); border-radius:6px; margin-bottom:0.4rem; cursor:pointer;">
-                <span>
+            <label class="num-tabular" style="display:flex; justify-content:space-between; align-items:center; padding:0.65rem 0.8rem; border:1px solid var(--border-strong); border-radius:var(--radius-sm); margin-bottom:0.45rem; cursor:pointer; background:var(--surface);">
+                <span style="display:flex; align-items:center; gap:0.55rem;">
                     <input type="checkbox" class="pay-item-cb" data-enrollment-id="${e.enrollment_id}" data-fee="${e.monthly_fee}" checked onchange="recalcSelectedPaymentTotal()">
-                    <strong>${escapeHtml(e.subject)}</strong> — ${escapeHtml(e.teacher_name)}
+                    <span><strong>${escapeHtml(e.subject)}</strong> — ${escapeHtml(e.teacher_name)}</span>
                 </span>
                 <strong>₹${e.monthly_fee}</strong>
             </label>

@@ -35,7 +35,7 @@ async function loadStudents() {
 function renderStudentsTable() {
     const tbody = document.getElementById("students-tbody");
     if (!studentsList.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted);">No students found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--text-muted);">No students found.</td></tr>`;
         return;
     }
 
@@ -46,23 +46,33 @@ function renderStudentsTable() {
                 ? activeEnrolls
                       .map(
                           (e) =>
-                              `<span class="badge badge-blue">${escapeHtml(e.subject)}: ${escapeHtml(e.teacher_name)} (₹${e.monthly_fee})</span>`
+                              `<span class="badge badge-blue num-tabular">${escapeHtml(e.subject)} · ${escapeHtml(e.teacher_name)} (₹${e.monthly_fee})</span>`
                       )
                       .join(" ")
-                : `<span class="badge badge-yellow">No active teachers</span>`;
+                : `<span class="badge badge-yellow badge-status">No active teachers</span>`;
 
             return `
             <tr>
                 <td>
-                    <strong>${escapeHtml(s.full_name)}</strong>
-                    ${s.phone ? `<br><small style="color:var(--muted);">${escapeHtml(s.phone)}</small>` : ""}
+                    <div class="identity-cell">
+                        <span class="avatar-circle avatar-blue">${escapeHtml(getInitials(s.full_name))}</span>
+                        <div class="identity-meta">
+                            <span class="identity-name">${escapeHtml(s.full_name)}</span>
+                            <span class="identity-sub">${escapeHtml(s.phone || "No personal phone")}</span>
+                        </div>
+                    </div>
                 </td>
                 <td><span class="badge badge-gray">${escapeHtml(s.grade)}</span></td>
-                <td>${escapeHtml(s.guardian_name)}<br><small style="color:var(--muted);">${escapeHtml(s.guardian_phone)}</small></td>
-                <td>${badges}</td>
-                <td><strong>₹${s.total_monthly_fee}</strong>/mo</td>
                 <td>
-                    <button class="btn btn-sm btn-secondary" onclick="openEditStudentModal(${s.id})">Edit Profile</button>
+                    <div class="identity-meta">
+                        <span class="identity-name" style="font-weight:500;">${escapeHtml(s.guardian_name)}</span>
+                        <span class="identity-sub">${escapeHtml(s.guardian_phone)}</span>
+                    </div>
+                </td>
+                <td>${badges}</td>
+                <td class="col-num"><strong>₹${s.total_monthly_fee}</strong><small style="color:var(--text-muted);">/mo</small></td>
+                <td class="col-num">
+                    <button class="btn btn-sm btn-secondary" onclick="openEditStudentModal(${s.id})">Edit</button>
                     <button class="btn btn-sm" onclick="openEnrollmentsModal(${s.id})">Teachers (${activeEnrolls.length})</button>
                 </td>
             </tr>
@@ -82,19 +92,19 @@ function openNewStudentModal() {
     activeTeachers.forEach((t) => {
         t.subjects.forEach((sub) => {
             options.push(`
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.35rem 0; border-bottom:1px solid #f1f5f9;">
-                    <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.4rem 0.25rem; border-bottom:1px solid var(--border);">
+                    <label style="display:flex; align-items:center; gap:0.55rem; cursor:pointer; font-size:0.875rem;">
                         <input type="checkbox" class="init-enroll-cb" data-teacher-id="${t.id}" data-subject="${escapeHtml(sub)}">
                         <span><strong>${escapeHtml(sub)}</strong> — ${escapeHtml(t.full_name)}</span>
                     </label>
-                    <input type="number" step="0.01" class="init-enroll-fee" value="${t.default_monthly_fee}" style="width:110px; padding:0.25rem 0.5rem;">
+                    <input type="number" step="0.01" class="init-enroll-fee num-tabular" value="${t.default_monthly_fee}" style="width:110px; padding:0.28rem 0.5rem;">
                 </div>
             `);
         });
     });
     container.innerHTML = options.length
         ? options.join("")
-        : `<p style="color:var(--muted); font-size:0.85rem;">Add teachers first to select initial enrollments.</p>`;
+        : `<p style="color:var(--text-muted); font-size:0.85rem;">Add teachers first to select initial enrollments.</p>`;
 
     openModal("student-modal");
 }
@@ -164,16 +174,16 @@ async function openEnrollmentsModal(studentId) {
 
     const listEl = document.getElementById("current-enrollments-list");
     if (!student.enrollments.length) {
-        listEl.innerHTML = `<p style="color:var(--muted);">Not enrolled with any teachers yet.</p>`;
+        listEl.innerHTML = `<p style="color:var(--text-muted);">Not enrolled with any teachers yet.</p>`;
     } else {
         listEl.innerHTML = student.enrollments
             .map(
                 (e) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.55rem 0.75rem; border:1px solid var(--border); border-radius:6px; margin-bottom:0.4rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.8rem; border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:0.45rem; background:var(--bg-canvas);">
                 <div>
                     <strong>${escapeHtml(e.subject)}</strong> — ${escapeHtml(e.teacher_name)}
-                    <span class="badge ${e.is_active ? "badge-green" : "badge-red"}">${e.is_active ? "Active" : "Dropped"}</span>
-                    <span style="font-size:0.85rem; color:var(--muted);">₹${e.monthly_fee}/month</span>
+                    <span class="badge badge-status ${e.is_active ? "badge-green" : "badge-red"}">${e.is_active ? "Active" : "Dropped"}</span>
+                    <span class="num-tabular" style="font-size:0.84rem; color:var(--text-muted);">₹${e.monthly_fee}/month</span>
                 </div>
                 <div>
                     <button class="btn btn-sm ${e.is_active ? "btn-danger" : "btn-success"}"

@@ -1,30 +1,123 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="preload-transitions">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Coaching Center Admin{% endblock %}</title>
+    <script>
+        // Anti-FOUC: Restore desktop drawer state before first browser paint (Default: open)
+        (function () {
+            try {
+                if (localStorage.getItem("sidebar_collapsed") === "true") {
+                    document.documentElement.setAttribute("data-sidebar", "collapsed");
+                } else {
+                    document.documentElement.setAttribute("data-sidebar", "open");
+                }
+            } catch (e) {
+                document.documentElement.setAttribute("data-sidebar", "open");
+            }
+        })();
+    </script>
     <link rel="stylesheet" href="/static/css/styles.css">
 </head>
 <body>
     <div class="app-shell">
-        <aside class="sidebar">
-            <div class="brand">Coaching Manager</div>
+        <!-- Mobile Off-Canvas Backdrop Overlay -->
+        <div id="sidebar-backdrop" class="sidebar-backdrop" onclick="closeMobileSidebar()" aria-hidden="true"></div>
+
+        <!-- 260px <-> 0px Retractable Side Panel -->
+        <aside id="app-sidebar" class="sidebar" aria-label="Primary Navigation">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span class="brand-mark">CM</span>
+                    <span>Coaching Manager</span>
+                </div>
+            </div>
+
+            <div class="nav-section-label">Administration</div>
             <ul class="nav-links">
-                <li><a href="/" class="{% if active_page == 'dashboard' %}active{% endif %}">Dashboard & Search</a></li>
-                <li><a href="/students" class="{% if active_page == 'students' %}active{% endif %}">Students & Enrollments</a></li>
-                <li><a href="/teachers" class="{% if active_page == 'teachers' %}active{% endif %}">Teachers & Schedules</a></li>
-                <li><a href="/payments" class="{% if active_page == 'payments' %}active{% endif %}">Payments & Dues Ledger</a></li>
+                <li>
+                    <a href="/" class="{% if active_page == 'dashboard' %}active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                        <span>Dashboard & Search</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/students" class="{% if active_page == 'students' %}active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <span>Students & Enrollments</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/teachers" class="{% if active_page == 'teachers' %}active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span>Teachers & Schedules</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/payments" class="{% if active_page == 'payments' %}active{% endif %}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                        <span>Payments & Dues Ledger</span>
+                    </a>
+                </li>
             </ul>
+
             <div class="sidebar-footer">
-                <span>Admin: <strong>{{ admin.username }}</strong></span>
-                <button class="btn btn-sm btn-danger" onclick="logoutAdmin()">Logout</button>
+                <div class="admin-profile">
+                    <span class="admin-avatar">{{ admin.username[:2] }}</span>
+                    <div class="admin-meta">
+                        <strong>{{ admin.username }}</strong>
+                        <span>Administrator</span>
+                    </div>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="logoutAdmin()" title="Sign out">Logout</button>
             </div>
         </aside>
 
-        <main class="main-content">
-            {% block content %}{% endblock %}
-        </main>
+        <!-- Fluid Main Viewport -->
+        <div class="app-viewport">
+            <header class="top-command-bar">
+                <div class="command-left">
+                    <button
+                        type="button"
+                        id="sidebar-toggle"
+                        class="hamburger-btn"
+                        onclick="toggleSidebar()"
+                        title="Toggle Sidebar (Ctrl+B)"
+                        aria-label="Toggle navigation drawer"
+                        aria-expanded="true"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div class="command-divider"></div>
+                    <nav class="breadcrumb-trail" aria-label="Breadcrumb">
+                        <span class="breadcrumb-root">Coaching Portal</span>
+                        <span class="breadcrumb-sep">/</span>
+                        <span class="breadcrumb-current">
+                            {% if active_page == 'dashboard' %}Center Overview
+                            {% elif active_page == 'students' %}Students & Enrollments
+                            {% elif active_page == 'teachers' %}Teachers & Weekly Schedules
+                            {% elif active_page == 'payments' %}Payments & Monthly Ledger
+                            {% else %}Portal{% endif %}
+                        </span>
+                    </nav>
+                </div>
+
+                <div class="command-right">
+                    <span class="kbd-hint" title="Keyboard shortcut to toggle sidebar">Ctrl + B</span>
+                    <a href="/students" class="btn btn-sm btn-secondary">+ Student</a>
+                    <a href="/payments" class="btn btn-sm">Collect Fee</a>
+                </div>
+            </header>
+
+            <main class="main-content">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
     </div>
 
     <div id="toast-container"></div>

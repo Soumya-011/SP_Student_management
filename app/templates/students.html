@@ -3,7 +3,10 @@
 
 {% block content %}
 <div class="page-header">
-    <h1 class="page-title">Students & Multi-Teacher Enrollments</h1>
+    <div>
+        <h1 class="page-title">Students & Multi-Teacher Enrollments</h1>
+        <p class="page-subtitle">Onboard students, assign multiple subject teachers, and manage per-subject monthly fees.</p>
+    </div>
     <button class="btn" onclick="openNewStudentModal()">+ Register Student</button>
 </div>
 
@@ -19,16 +22,16 @@
         <table>
             <thead>
                 <tr>
-                    <th>Student Name</th>
+                    <th>Student</th>
                     <th>Grade</th>
-                    <th>Guardian & Phone</th>
-                    <th>Enrolled Teachers & Subjects</th>
-                    <th>Monthly Fee</th>
-                    <th>Actions</th>
+                    <th>Guardian Contact</th>
+                    <th>Active Teachers & Subjects</th>
+                    <th class="col-num">Total Monthly Fee</th>
+                    <th class="col-num">Actions</th>
                 </tr>
             </thead>
             <tbody id="students-tbody">
-                <tr><td colspan="6">Loading students...</td></tr>
+                <tr><td colspan="6" style="color:var(--text-muted);">Loading students...</td></tr>
             </tbody>
         </table>
     </div>
@@ -66,11 +69,11 @@
                 </div>
             </div>
 
-            <div id="initial-enrollments-section" style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 0.85rem;">
-                <label style="font-weight: 600; font-size: 0.9rem; display:block; margin-bottom: 0.5rem;">
-                    Select Initial Teachers & Subjects (Optional — can also be changed later):
+            <div id="initial-enrollments-section" style="margin-top:1rem; border-top:1px solid var(--border); padding-top:0.9rem;">
+                <label style="font-weight:600; font-size:0.84rem; color:var(--text-secondary); display:block; margin-bottom:0.5rem;">
+                    Select Initial Teachers & Subjects (Optional — can be modified anytime):
                 </label>
-                <div id="initial-enrollment-options" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 0.65rem;"></div>
+                <div id="initial-enrollment-options" style="max-height:220px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.65rem; background:var(--bg-canvas);"></div>
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.25rem;">
@@ -89,9 +92,9 @@
             <button class="btn btn-sm btn-secondary" onclick="closeModal('enrollments-modal')">✕</button>
         </div>
 
-        <div id="current-enrollments-list" style="margin-bottom: 1.25rem;"></div>
+        <div id="current-enrollments-list" style="margin-bottom:1.25rem;"></div>
 
-        <h4 style="margin-bottom: 0.6rem; border-top: 1px solid var(--border); padding-top: 0.85rem;">Enroll in Additional Teacher / Subject</h4>
+        <h4 style="font-size:0.9rem; margin-bottom:0.75rem; border-top:1px solid var(--border); padding-top:1rem;">Enroll in Additional Teacher / Subject</h4>
         <form id="add-enrollment-form">
             <input type="hidden" id="enroll-student-id">
             <div class="form-grid">
@@ -100,11 +103,11 @@
                     <select id="enroll-teacher-subject" required></select>
                 </div>
                 <div class="form-group">
-                    <label>Monthly Fee (₹) *</label>
+                    <label>Agreed Monthly Fee (₹) *</label>
                     <input type="number" step="0.01" id="enroll-fee" required>
                 </div>
             </div>
-            <div style="display:flex; justify-content:flex-end; margin-top: 0.5rem;">
+            <div style="display:flex; justify-content:flex-end; margin-top:0.5rem;">
                 <button type="submit" class="btn">+ Add Enrollment</button>
             </div>
         </form>

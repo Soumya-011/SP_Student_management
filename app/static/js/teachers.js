@@ -14,7 +14,7 @@ async function loadTeachers() {
 function renderTeachersTable() {
     const tbody = document.getElementById("teachers-tbody");
     if (!allTeachers.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="color:var(--muted);">No teachers found.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="color:var(--text-muted);">No teachers found.</td></tr>`;
         return;
     }
 
@@ -27,24 +27,31 @@ function renderTeachersTable() {
             ? t.schedules
                   .map(
                       (sc) =>
-                          `<div style="font-size:0.8rem; margin-bottom:0.2rem;">
+                          `<div class="num-tabular" style="font-size:0.8rem; margin-bottom:0.25rem;">
                               <strong>${escapeHtml(sc.day_name.slice(0, 3))}</strong>
                               ${sc.start_time.slice(0, 5)}–${sc.end_time.slice(0, 5)}
-                              <span class="badge badge-gray">${escapeHtml(sc.subject)} (${escapeHtml(sc.grade_batch)})</span>
+                              <span class="badge badge-gray">${escapeHtml(sc.subject)} · ${escapeHtml(sc.grade_batch)}</span>
                           </div>`
                   )
                   .join("")
-            : `<span style="color:var(--muted); font-size:0.8rem;">No slots</span>`;
+            : `<span style="color:var(--text-muted); font-size:0.8rem;">No slots scheduled</span>`;
 
         return `
             <tr>
-                <td><strong>${escapeHtml(t.full_name)}</strong></td>
-                <td>${escapeHtml(t.phone)}<br><small style="color:var(--muted);">${escapeHtml(t.email || "")}</small></td>
-                <td>${subjectsHtml}</td>
-                <td>₹${t.default_monthly_fee}</td>
-                <td><span class="badge badge-green">${t.active_students_count} active</span></td>
-                <td>${scheduleHtml}</td>
                 <td>
+                    <div class="identity-cell">
+                        <span class="avatar-circle">${escapeHtml(getInitials(t.full_name))}</span>
+                        <div class="identity-meta">
+                            <span class="identity-name">${escapeHtml(t.full_name)}</span>
+                            <span class="identity-sub">${escapeHtml(t.phone)}${t.email ? ` · ${escapeHtml(t.email)}` : ""}</span>
+                        </div>
+                    </div>
+                </td>
+                <td>${subjectsHtml}</td>
+                <td class="col-num"><strong>₹${t.default_monthly_fee}</strong></td>
+                <td><span class="badge badge-green badge-status">${t.active_students_count} active</span></td>
+                <td>${scheduleHtml}</td>
+                <td class="col-num">
                     <button class="btn btn-sm btn-secondary" onclick="openEditTeacherModal(${t.id})">Edit</button>
                     <button class="btn btn-sm" onclick="openScheduleModal(${t.id})">Schedule</button>
                 </td>
@@ -133,19 +140,19 @@ async function refreshScheduleModalList(teacherId) {
     const container = document.getElementById("schedule-list-container");
 
     if (!schedules.length) {
-        container.innerHTML = `<p style="color:var(--muted); font-size:0.9rem;">No weekly classes scheduled yet.</p>`;
+        container.innerHTML = `<p style="color:var(--text-muted); font-size:0.875rem;">No weekly classes scheduled yet.</p>`;
         return;
     }
 
     container.innerHTML = schedules
         .map(
             (sc) => `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.5rem 0.75rem; border:1px solid var(--border); border-radius:6px; margin-bottom:0.4rem;">
+            <div class="num-tabular" style="display:flex; justify-content:space-between; align-items:center; padding:0.6rem 0.8rem; border:1px solid var(--border); border-radius:var(--radius-sm); margin-bottom:0.45rem; background:var(--bg-canvas);">
                 <div>
-                    <strong>${escapeHtml(sc.day_name)}</strong>: ${sc.start_time.slice(0, 5)} – ${sc.end_time.slice(0, 5)}
-                    | <span class="badge badge-blue">${escapeHtml(sc.subject)}</span>
+                    <strong>${escapeHtml(sc.day_name)}</strong> · ${sc.start_time.slice(0, 5)} – ${sc.end_time.slice(0, 5)}
+                    <span class="badge badge-blue">${escapeHtml(sc.subject)}</span>
                     <strong>${escapeHtml(sc.grade_batch)}</strong>
-                    ${sc.room ? `<small style="color:var(--muted);">(${escapeHtml(sc.room)})</small>` : ""}
+                    ${sc.room ? `<small style="color:var(--text-muted);">(${escapeHtml(sc.room)})</small>` : ""}
                 </div>
                 <button class="btn btn-sm btn-danger" onclick="deleteScheduleSlot(${sc.id}, ${teacherId})">Delete</button>
             </div>

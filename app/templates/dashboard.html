@@ -3,10 +3,13 @@
 
 {% block content %}
 <div class="page-header">
-    <h1 class="page-title">Center Overview ({{ current_month }})</h1>
-    <div style="display: flex; gap: 0.5rem;">
-        <a href="/students" class="btn">+ New Student</a>
-        <a href="/payments" class="btn btn-success">Collect Fees</a>
+    <div>
+        <h1 class="page-title">Center Overview ({{ current_month }})</h1>
+        <p class="page-subtitle">Real-time enrollment metrics, monthly fee collection status, and instant directory lookup.</p>
+    </div>
+    <div style="display:flex; gap:0.5rem;">
+        <a href="/students" class="btn btn-secondary">+ Register Student</a>
+        <a href="/payments" class="btn btn-success">Open Fee Ledger</a>
     </div>
 </div>
 
@@ -14,37 +17,53 @@
     <div class="stat-card">
         <div class="stat-label">Active Students</div>
         <div class="stat-value">{{ stats.active_students }}</div>
+        <div class="stat-meta">Currently enrolled across batches</div>
     </div>
     <div class="stat-card">
-        <div class="stat-label">Active Teachers</div>
+        <div class="stat-label">Active Faculty</div>
         <div class="stat-value">{{ stats.active_teachers }}</div>
+        <div class="stat-meta">Teachers with active subjects</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Collected ({{ current_month }})</div>
-        <div class="stat-value" style="color: var(--success);">₹{{ stats.month_collected }}</div>
+        <div class="stat-value" style="color:var(--success);">₹{{ stats.month_collected }}</div>
+        <div class="stat-meta num-tabular">Expected Total: ₹{{ stats.month_expected }}</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Pending Dues ({{ current_month }})</div>
-        <div class="stat-value" style="color: var(--danger);">₹{{ stats.month_pending }}</div>
-        <div style="font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem;">
-            {{ stats.unpaid_students_count }} student(s) with pending fees
-        </div>
+        <div class="stat-value" style="color:var(--danger);">₹{{ stats.month_pending }}</div>
+        <div class="stat-meta">{{ stats.unpaid_students_count }} student(s) with unpaid balance</div>
     </div>
 </div>
 
 <div class="card">
-    <h3 style="margin-bottom: 0.75rem;">Unified Quick Search (Students & Teachers)</h3>
-    <div class="toolbar">
-        <input type="text" id="global-search-input" class="search-input" placeholder="Type a student name, phone, subject, or teacher name...">
+    <div class="card-header">
+        <h3 class="card-title">Unified Directory Search (Students, Subjects & Faculty Timetables)</h3>
     </div>
-    <div id="global-search-results" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-top: 1rem;">
+    <div class="toolbar">
+        <input
+            type="text"
+            id="global-search-input"
+            class="search-input"
+            placeholder="Search by student name, phone, grade, subject, or teacher name..."
+        >
+    </div>
+    <div id="global-search-results" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:1.25rem; margin-top:1rem;">
         <div>
-            <h4 style="margin-bottom: 0.5rem; color: var(--muted);">Matching Students</h4>
-            <div id="quick-students-list" style="font-size: 0.9rem;">Type above to search students...</div>
+            <h4 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.65rem; color:var(--text-muted);">
+                Matching Students
+            </h4>
+            <div id="quick-students-list" style="font-size:0.875rem; color:var(--text-muted);">
+                Type in the search box above to look up student profiles and active enrollments...
+            </div>
         </div>
         <div>
-            <h4 style="margin-bottom: 0.5rem; color: var(--muted);">Matching Teachers & Schedules</h4>
-            <div id="quick-teachers-list" style="font-size: 0.9rem;">Type above to search teachers...</div>
+            <h4 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.65rem; color:var(--text-muted);">
+                Matching Teachers & Weekly Schedules
+            </h4>
+            <div id="quick-teachers-list" style="font-size:0.875rem; color:var(--text-muted);">
+                Type in the search box above to inspect faculty subjects and class timings...
+            </div>
         </div>
     </div>
 </div>
@@ -59,8 +78,8 @@ const teachersBox = document.getElementById("quick-teachers-list");
 const runGlobalSearch = debounce(async () => {
     const q = searchInput.value.trim();
     if (!q) {
-        studentsBox.innerHTML = "Type above to search students...";
-        teachersBox.innerHTML = "Type above to search teachers...";
+        studentsBox.innerHTML = "Type in the search box above to look up student profiles and active enrollments...";
+        teachersBox.innerHTML = "Type in the search box above to inspect faculty subjects and class timings...";
         return;
     }
     try {
@@ -70,35 +89,58 @@ const runGlobalSearch = debounce(async () => {
         ]);
 
         if (!students.length) {
-            studentsBox.innerHTML = `<p style="color:var(--muted);">No matching students found.</p>`;
+            studentsBox.innerHTML = `<p style="color:var(--text-muted);">No matching students found.</p>`;
         } else {
             studentsBox.innerHTML = students.map(s => {
                 const activeEnrolls = s.enrollments.filter(e => e.is_active)
-                    .map(e => `<span class="badge badge-blue">${escapeHtml(e.subject)} (${escapeHtml(e.teacher_name)})</span>`)
+                    .map(e => `<span class="badge badge-blue">${escapeHtml(e.subject)} · ${escapeHtml(e.teacher_name)}</span>`)
                     .join(" ");
                 return `
-                    <div style="padding: 0.65rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.5rem;">
-                        <strong>${escapeHtml(s.full_name)}</strong> <span class="badge badge-gray">${escapeHtml(s.grade)}</span>
-                        <div style="font-size: 0.8rem; color: var(--muted);">Guardian: ${escapeHtml(s.guardian_name)} (${escapeHtml(s.guardian_phone)}) | Monthly Fee: ₹${s.total_monthly_fee}</div>
-                        <div style="margin-top: 0.35rem;">${activeEnrolls || '<span class="badge badge-yellow">No active teachers</span>'}</div>
+                    <div style="padding:0.85rem; border:1px solid var(--border); border-radius:var(--radius-md); margin-bottom:0.6rem; background:var(--surface);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="identity-cell">
+                                <span class="avatar-circle avatar-blue">${escapeHtml(getInitials(s.full_name))}</span>
+                                <div class="identity-meta">
+                                    <span class="identity-name">${escapeHtml(s.full_name)}</span>
+                                    <span class="identity-sub">Guardian: ${escapeHtml(s.guardian_name)} (${escapeHtml(s.guardian_phone)})</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-gray">${escapeHtml(s.grade)}</span>
+                        </div>
+                        <div style="margin-top:0.6rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.4rem;">
+                            <div>${activeEnrolls || '<span class="badge badge-yellow badge-status">No active teachers</span>'}</div>
+                            <strong class="num-tabular" style="font-size:0.85rem;">₹${s.total_monthly_fee}/mo</strong>
+                        </div>
                     </div>
                 `;
             }).join("");
         }
 
         if (!teachers.length) {
-            teachersBox.innerHTML = `<p style="color:var(--muted);">No matching teachers found.</p>`;
+            teachersBox.innerHTML = `<p style="color:var(--text-muted);">No matching teachers found.</p>`;
         } else {
             teachersBox.innerHTML = teachers.map(t => {
-                const subBadges = t.subjects.map(sub => `<span class="badge badge-green">${escapeHtml(sub)}</span>`).join(" ");
+                const subBadges = t.subjects.map(sub => `<span class="badge badge-gray">${escapeHtml(sub)}</span>`).join(" ");
                 const schedList = t.schedules.map(sc =>
-                    `<div style="font-size:0.8rem;">• <strong>${escapeHtml(sc.day_name)}</strong> ${sc.start_time.slice(0,5)}–${sc.end_time.slice(0,5)} (${escapeHtml(sc.subject)} - ${escapeHtml(sc.grade_batch)})</div>`
+                    `<div class="num-tabular" style="font-size:0.8rem; color:var(--text-secondary); margin-top:0.2rem;">
+                        • <strong>${escapeHtml(sc.day_name.slice(0,3))}</strong> ${sc.start_time.slice(0,5)}–${sc.end_time.slice(0,5)}
+                        <span style="color:var(--text-muted);">(${escapeHtml(sc.subject)} · ${escapeHtml(sc.grade_batch)})</span>
+                    </div>`
                 ).join("");
                 return `
-                    <div style="padding: 0.65rem; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 0.5rem;">
-                        <strong>${escapeHtml(t.full_name)}</strong> (${escapeHtml(t.phone)}) — <span style="font-size:0.8rem;">${t.active_students_count} active student(s)</span>
-                        <div style="margin: 0.25rem 0;">${subBadges}</div>
-                        <div>${schedList || '<span style="font-size:0.8rem;color:var(--muted);">No weekly schedule slots added</span>'}</div>
+                    <div style="padding:0.85rem; border:1px solid var(--border); border-radius:var(--radius-md); margin-bottom:0.6rem; background:var(--surface);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div class="identity-cell">
+                                <span class="avatar-circle">${escapeHtml(getInitials(t.full_name))}</span>
+                                <div class="identity-meta">
+                                    <span class="identity-name">${escapeHtml(t.full_name)}</span>
+                                    <span class="identity-sub">${escapeHtml(t.phone)}</span>
+                                </div>
+                            </div>
+                            <span class="badge badge-green badge-status">${t.active_students_count} student(s)</span>
+                        </div>
+                        <div style="margin:0.5rem 0;">${subBadges}</div>
+                        <div>${schedList || '<span style="font-size:0.8rem;color:var(--text-muted);">No weekly schedule slots assigned</span>'}</div>
                     </div>
                 `;
             }).join("");
