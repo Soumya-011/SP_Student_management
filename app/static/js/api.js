@@ -59,7 +59,6 @@ function syncSidebarAccessibility() {
         isOpen = html.getAttribute("data-mobile-sidebar") === "open";
     }
 
-    // Prevent keyboard Tab focus inside hidden 0px drawer
     sidebar.inert = !isOpen;
     sidebar.setAttribute("aria-hidden", String(!isOpen));
     if (toggleBtn) {
@@ -92,18 +91,21 @@ function closeMobileSidebar() {
     syncSidebarAccessibility();
 }
 
-// Initialize drawer transitions, resize sync, and keyboard shortcuts
+function openPasswordModal() {
+    const form = document.getElementById("change-password-form");
+    if (form) form.reset();
+    openModal("password-modal");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     syncSidebarAccessibility();
 
-    // Remove preload transition lock after initial paint
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             document.documentElement.classList.remove("preload-transitions");
         });
     });
 
-    // Clear mobile backdrop lock automatically if window resizes to desktop
     DESKTOP_MEDIA.addEventListener("change", (e) => {
         if (e.matches) {
             document.documentElement.removeAttribute("data-mobile-sidebar");
@@ -111,7 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
         syncSidebarAccessibility();
     });
 
-    // Keyboard shortcuts: Ctrl+B / Cmd+B toggles drawer; Escape closes modals/mobile drawer
     document.addEventListener("keydown", (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
             e.preventDefault();
@@ -123,6 +124,37 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
     });
+
+    const pwdForm = document.getElementById("change-password-form");
+    if (pwdForm) {
+        pwdForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const currentPassword = document.getElementById("cp-current").value;
+            const newPassword = document.getElementById("cp-new").value;
+            const confirmPassword = document.getElementById("cp-confirm").value;
+
+            if (newPassword !== confirmPassword) {
+                showToast("New password and confirmation do not match", "error");
+                return;
+            }
+
+            try {
+                await apiFetch("/api/v1/auth/change-password", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword,
+                        confirm_password: confirmPassword,
+                    }),
+                });
+                showToast("Admin password updated successfully");
+                closeModal("password-modal");
+                pwdForm.reset();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        });
+    }
 });
 
 async function apiFetch(url, options = {}) {

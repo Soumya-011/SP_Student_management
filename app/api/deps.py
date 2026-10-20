@@ -6,9 +6,9 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import decode_access_token
+from app.core.audit import set_audit_actor
 from app.models.admin import Admin
 
-# auto_error=False allows us to fall back to HttpOnly cookies if no Bearer header is sent
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
 
 
@@ -19,7 +19,7 @@ def get_current_admin(
 ) -> Admin:
     """
     Authenticates the Admin via Bearer token (Swagger UI / API)
-    or HttpOnly Cookie (Jinja2 HTML frontend).
+    or HttpOnly Cookie (Jinja2 HTML frontend) and binds the admin to the audit context.
     """
     jwt_token = token or request.cookies.get("access_token")
     if not jwt_token:
@@ -43,4 +43,7 @@ def get_current_admin(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Admin user not found",
         )
+
+    # Bind authenticated admin to current request context for automatic SQLAlchemy auditing
+    set_audit_actor(admin.id, admin.username)
     return admin

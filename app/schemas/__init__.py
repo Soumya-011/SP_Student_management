@@ -1,4 +1,4 @@
-from app.schemas.auth import Token, AdminResponse
+from app.schemas.auth import Token, AdminResponse, PasswordChangeRequest
 from app.schemas.schedule import ScheduleCreate, ScheduleUpdate, ScheduleResponse
 from app.schemas.teacher import TeacherCreate, TeacherUpdate, TeacherResponse
 from app.schemas.enrollment import (
@@ -19,6 +19,7 @@ from app.schemas.payment import (
 __all__ = [
     "Token",
     "AdminResponse",
+    "PasswordChangeRequest",
     "ScheduleCreate",
     "ScheduleUpdate",
     "ScheduleResponse",
