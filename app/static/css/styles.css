@@ -251,9 +251,10 @@ th.col-num {
     border-top: 1px solid var(--sidebar-border);
     padding: 0.9rem 1.15rem;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 0.65rem;
     background: rgba(15, 23, 42, 0.5);
+    overflow: hidden;
 }
 
 .admin-profile {

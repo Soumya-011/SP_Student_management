@@ -40,7 +40,8 @@ def seed_default_admin():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
+    # Tables are created by migration.py (coaching_migrator role).
+    # The app role (coaching_app) has no DDL privileges.
     seed_default_admin()
     yield
 
